@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= @title || "StudyPal — Student & Mentor Learning Platform" %></title>
+  <meta name="description" content="Students connect with mentors for personalized assignment support, guidance, and help building confidence in their studies.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/studypal.css">
+  <style>
+    /* Custom enhancements for interactive elements */
+    .flash-notice {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 1000;
+      background: #10b981;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+      font-weight: 600;
+      font-size: 14px;
+      animation: fadeInSlide 0.3s ease-out;
+    }
+    @keyframes fadeInSlide {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <% if @flash_notice %>
+    <div class="flash-notice" id="flash-notice">
+      <%= @flash_notice %>
+    </div>
+    <script>
+      setTimeout(() => {
+        const el = document.getElementById('flash-notice');
+        if (el) el.style.display = 'none';
+      }, 4000);
+    </script>
+  <% end %>
+
+  <%= yield %>
+
+  <!-- Interactive Modal & State Scripts -->
+  <script>
+    function openLoginModal() {
+      const modal = document.getElementById('login-modal-backdrop');
+      if (modal) {
+        modal.classList.remove('modal-hidden');
+      }
+    }
+
+    function closeLoginModal() {
+      const modal = document.getElementById('login-modal-backdrop');
+      if (modal) {
+        modal.classList.add('modal-hidden');
+      }
+    }
+
+    function openBookingModal(mentorId, mentorName, mentorRole, mentorRating, mentorImage) {
+      const modal = document.getElementById('booking-modal-backdrop');
+      if (modal) {
+        document.getElementById('booking-mentor-id').value = mentorId || '';
+        document.getElementById('booking-mentor-name').innerText = mentorName || 'Your Mentor';
+        document.getElementById('booking-modal-title-name').innerText = mentorName || '';
+        document.getElementById('booking-mentor-role').innerText = (mentorRole || '') + ' · ★ ' + (mentorRating || '5.0');
+        if (mentorImage) {
+          document.getElementById('booking-mentor-img').src = mentorImage;
+        }
+        modal.classList.remove('modal-hidden');
+      }
+    }
+
+    function closeBookingModal() {
+      const modal = document.getElementById('booking-modal-backdrop');
+      if (modal) {
+        modal.classList.add('modal-hidden');
+      }
+    }
+
+    function selectTimeSlot(button, timeStr) {
+      document.querySelectorAll('.time-grid button').forEach(btn => btn.classList.remove('selected'));
+      button.classList.add('selected');
+      const input = document.getElementById('selected-time-slot');
+      if (input) input.value = timeStr;
+    }
+
+    function toggleMobileMenu() {
+      const nav = document.getElementById('topbar-nav');
+      if (nav) {
+        nav.classList.toggle('open');
+      }
+    }
+  </script>
+</body>
+</html>
