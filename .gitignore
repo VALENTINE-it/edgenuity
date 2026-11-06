@@ -1,0 +1,37 @@
+# Ignore bundler config.
+/.bundle
+
+# Ignore all logfiles and tempfiles.
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+# Ignore pidfiles, but keep the directory.
+/tmp/pids/*
+!/tmp/pids/
+!/tmp/pids/.keep
+
+# Ignore uploaded files in development.
+/storage/*
+!/storage/
+!/storage/.keep
+
+# Ignore master key for decrypting credentials.
+/config/master.key
+
+# Ignore SQLite3 databases.
+/db/*.sqlite3
+/db/*.sqlite3-journal
+/db/*.sqlite3-shm
+/db/*.sqlite3-wal
+
+/storage/*.sqlite3
+/storage/*.sqlite3-journal
+/storage/*.sqlite3-shm
+/storage/*.sqlite3-wal
+
+# Ignore system test screenshots.
+/test/system/screenshots
+
+.DS_Store
