@@ -1,0 +1,10 @@
+upcoming:
+  student_name: Maya
+  mentor: lena
+  subject: CALCULUS
+  topic: Integration techniques
+  session_date: 2026-03-14
+  start_time: "10:30 AM"
+  end_time: "11:15 AM"
+  status: confirmed
+  help_type: Assignment review

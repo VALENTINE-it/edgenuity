@@ -1,0 +1,26 @@
+lena:
+  name: Dr. Lena Ortiz
+  role: Mathematics & Statistics
+  image: https://images.unsplash.com/photo-1643297654473-049b273de9e6?auto=format&fit=crop&w=500&q=85
+  rating: 4.9
+  sessions_count: 240+ sessions
+  tags: Calculus, Statistics
+  color: "#f4dcff"
+
+noah:
+  name: Noah Williams
+  role: Computer Science
+  image: https://images.unsplash.com/photo-1787647560526-655b78e31453?auto=format&fit=crop&w=500&q=85
+  rating: 4.8
+  sessions_count: 180+ sessions
+  tags: Python, Algorithms
+  color: "#d7f2ed"
+
+james:
+  name: James Chen
+  role: Physics & Engineering
+  image: https://images.unsplash.com/photo-1544168190-79c17527004f?auto=format&fit=crop&w=500&q=85
+  rating: 5.0
+  sessions_count: 315+ sessions
+  tags: Physics, Mechanics
+  color: "#ffe9cc"
