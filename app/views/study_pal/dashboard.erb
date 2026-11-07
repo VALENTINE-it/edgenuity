@@ -15,8 +15,8 @@
       <a href="#session">
         <%= icon(:calendar) %> My sessions
       </a>
-      <a href="#messages" onclick="alert('You have 2 new messages from Dr. Lena Ortiz regarding your calculus assignment!')">
-        <%= icon(:message) %> Messages <b>2</b>
+      <a href="javascript:void(0)" onclick="openCookiePreferencesModal()">
+        <%= icon(:spark) %> Privacy & Cookies
       </a>
     </nav>
 
@@ -24,10 +24,12 @@
       <span><%= icon(:spark) %></span>
       <h4>Need quick help?</h4>
       <p>Tell us what you're working on and we'll find the right mentor.</p>
-      <% first_mentor = @mentors.first %>
-      <button type="button" onclick="openBookingModal('<%= first_mentor.id %>', '<%= first_mentor.name %>', '<%= first_mentor.role %>', '<%= first_mentor.rating %>', '<%= first_mentor.image %>')">
-        Get matched
-      </button>
+      <% first_mentor = @mentors.first || Mentor.first %>
+      <% if first_mentor %>
+        <button type="button" onclick="openBookingModal('<%= first_mentor.id %>', '<%= first_mentor.name %>', '<%= first_mentor.role %>', '<%= first_mentor.rating %>', '<%= first_mentor.image %>')">
+          Get matched
+        </button>
+      <% end %>
     </div>
 
     <a class="logout" href="/logout" style="text-align: center; text-decoration: none; display: block;">Log out</a>
@@ -38,17 +40,22 @@
     <header>
       <div>
         <p><%= Time.now.strftime("%A, %B %d") %></p>
-        <h1>Good morning, Maya!</h1>
+        <h1>Good morning, <%= @current_user ? @current_user.first_name : "Student" %>!</h1>
       </div>
       <div class="student">
         <button aria-label="Search" type="button" onclick="document.getElementById('dashboard-mentors').scrollIntoView({behavior: 'smooth'})">
           <%= icon(:search) %>
         </button>
-        <span class="notification">3</span>
-        <img src="https://images.unsplash.com/photo-1717509321467-d7ab4aa02abd?auto=format&fit=crop&w=120&q=80" alt="Maya's profile">
+        <% if @current_user&.avatar_url.present? %>
+          <img src="<%= @current_user.avatar_url %>" alt="<%= @current_user.name %>'s profile">
+        <% else %>
+          <div style="width: 38px; height: 38px; border-radius: 12px; background: #00007c; color: white; display: grid; place-items: center; font-weight: 800; font-size: 13px;">
+            <%= @current_user&.initials || "ST" %>
+          </div>
+        <% end %>
         <div>
-          <strong>Maya</strong>
-          <small>Student</small>
+          <strong><%= @current_user&.name || "Student" %></strong>
+          <small><%= @current_user&.role&.capitalize || "Student" %></small>
         </div>
       </div>
     </header>
@@ -60,10 +67,12 @@
           <%= icon(:spark, size: 16) %> You're making great progress
         </span>
         <h2>What can we help you<br>understand today?</h2>
-        <p>Get unstuck with one-on-one guidance from a mentor who gets it.</p>
-        <button type="button" onclick="openBookingModal('<%= first_mentor.id %>', '<%= first_mentor.name %>', '<%= first_mentor.role %>', '<%= first_mentor.rating %>', '<%= first_mentor.image %>')">
-          Find a mentor <%= icon(:arrow, size: 18) %>
-        </button>
+        <p>Get unstuck with one-on-one guidance from a verified mentor who gets it.</p>
+        <% if first_mentor %>
+          <button type="button" onclick="openBookingModal('<%= first_mentor.id %>', '<%= first_mentor.name %>', '<%= first_mentor.role %>', '<%= first_mentor.rating %>', '<%= first_mentor.image %>')">
+            Find a mentor <%= icon(:arrow, size: 18) %>
+          </button>
+        <% end %>
       </div>
       <div class="welcome-art">
         <div class="orbit o1"></div>
@@ -122,37 +131,47 @@
             <%= icon(:calendar) %>
           </div>
 
-          <% upcoming = @upcoming_session || MentoringSession.first %>
-          <% if upcoming %>
+          <% if @upcoming_session %>
             <div class="session-date">
-              <b><%= upcoming.session_date.strftime("%d") %></b>
+              <b><%= @upcoming_session.session_date.strftime("%d") %></b>
               <span>
-                <%= upcoming.session_date.strftime("%^b") %>
-                <small><%= upcoming.session_date.strftime("%A") %></small>
+                <%= @upcoming_session.session_date.strftime("%^b") %>
+                <small><%= @upcoming_session.session_date.strftime("%A") %></small>
               </span>
             </div>
 
             <div class="session-subject">
-              <span><%= upcoming.subject %></span>
-              <h3><%= upcoming.topic %></h3>
+              <span><%= @upcoming_session.subject %></span>
+              <h3><%= @upcoming_session.topic %></h3>
             </div>
 
             <div class="session-mentor">
-              <img src="<%= upcoming.mentor.image %>" alt="<%= upcoming.mentor.name %>">
+              <img src="<%= @upcoming_session.mentor.image %>" alt="<%= @upcoming_session.mentor.name %>">
               <div>
-                <strong><%= upcoming.mentor.name %></strong>
-                <small><%= upcoming.start_time %>–<%= upcoming.end_time %></small>
+                <strong><%= @upcoming_session.mentor.name %></strong>
+                <small><%= @upcoming_session.start_time %>–<%= @upcoming_session.end_time %></small>
               </div>
-              <button type="button" aria-label="Message mentor" onclick="alert('Opening direct chat with <%= upcoming.mentor.name %>...')">
+              <button type="button" aria-label="Message mentor" onclick="alert('Opening direct chat with <%= @upcoming_session.mentor.name %>...')">
                 <%= icon(:message, size: 18) %>
               </button>
             </div>
 
-            <button class="join-button" type="button" onclick="alert('Joining secure video room with <%= upcoming.mentor.name %>...')">
+            <button class="join-button" type="button" onclick="alert('Joining secure video room with <%= @upcoming_session.mentor.name %>...')">
               <%= icon(:video, size: 17) %> Join session
             </button>
           <% else %>
-            <p style="padding: 20px 0; color: #6b7280; font-size: 14px;">No upcoming sessions scheduled yet.</p>
+            <div style="background: white; border: 1.5px dashed #cbd5e1; border-radius: 16px; padding: 28px 18px; text-align: center; margin-top: 10px;">
+              <div style="width: 44px; height: 44px; border-radius: 50%; background: #e0e7ff; color: #00007c; display: grid; place-items: center; margin: 0 auto 10px;">
+                <%= icon(:calendar, size: 22) %>
+              </div>
+              <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">No upcoming sessions</h3>
+              <p style="font-size: 12px; color: #64748b; line-height: 1.4; margin-bottom: 14px;">Whenever you get stuck on a tricky assignment, connect with a verified mentor.</p>
+              <% if first_mentor %>
+                <button class="primary-button small" type="button" style="margin: 0 auto; justify-content: center;" onclick="openBookingModal('<%= first_mentor.id %>', '<%= first_mentor.name %>', '<%= first_mentor.role %>', '<%= first_mentor.rating %>', '<%= first_mentor.image %>')">
+                  Book your first session
+                </button>
+              <% end %>
+            </div>
           <% end %>
         </div>
 
@@ -160,11 +179,11 @@
         <div class="progress-card">
           <div>
             <span><%= icon(:clock) %></span>
-            <strong>4.5 hrs</strong>
+            <strong><%= @user_sessions.present? ? "#{@user_sessions.count * 0.75} hrs" : "0.0 hrs" %></strong>
             <small>Learning time this week</small>
           </div>
           <div>
-            <b>+18%</b> from last week
+            <b><%= @user_sessions.count %> session<%= 's' if @user_sessions.count != 1 %></b> booked
           </div>
         </div>
       </section>
@@ -173,6 +192,7 @@
 </div>
 
 <!-- Booking Modal Backdrop -->
+<% if first_mentor %>
 <div class="modal-backdrop modal-hidden" id="booking-modal-backdrop" role="presentation" onclick="if(event.target === this) closeBookingModal()">
   <div class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-title">
     <button class="modal-close" aria-label="Close booking" type="button" onclick="closeBookingModal()">
@@ -181,7 +201,7 @@
 
     <div id="booking-form-step">
       <span class="modal-label">Book a session</span>
-      <h2 id="booking-title">Choose a time with <span id="booking-modal-title-name">Dr. Lena Ortiz</span></h2>
+      <h2 id="booking-title">Choose a time with <span id="booking-modal-title-name"><%= first_mentor.name %></span></h2>
 
       <div class="booking-mentor">
         <img id="booking-mentor-img" src="<%= first_mentor.image %>" alt="">
@@ -217,3 +237,4 @@
     </div>
   </div>
 </div>
+<% end %>
