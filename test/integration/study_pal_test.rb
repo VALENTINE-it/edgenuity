@@ -2,6 +2,14 @@ require "test_helper"
 
 class StudyPalTest < ActionDispatch::IntegrationTest
   setup do
+    RateLimiter.reset!
+    @user = User.find_by(email: "maya.lin@school.edu") || User.create!(
+      name: "Maya Lin",
+      email: "maya.lin@school.edu",
+      password: "Password123!",
+      password_confirmation: "Password123!"
+    )
+
     @mentor = Mentor.first || Mentor.create!(
       name: "Dr. Lena Ortiz",
       role: "Mathematics & Statistics",
@@ -24,9 +32,23 @@ class StudyPalTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "How it works"
   end
 
-  test "dashboard renders successfully with upcoming session and mentor recommendations" do
+  test "unauthenticated visitor to dashboard is redirected to login" do
     get "/dashboard"
+    assert_response :redirect
+    follow_redirect!
     assert_response :success
+    assert_includes response.body, "Please log in or create an account"
+  end
+
+  test "dashboard renders successfully for authenticated student with recommendations" do
+    post "/login", params: {
+      email: "maya.lin@school.edu",
+      password: "Password123!"
+    }
+    assert_response :redirect
+    follow_redirect!
+    assert_response :success
+
     assert_includes response.body, "Good morning, Maya!"
     assert_includes response.body, "Upcoming session"
     assert_includes response.body, "Mentors for you"
@@ -34,6 +56,12 @@ class StudyPalTest < ActionDispatch::IntegrationTest
   end
 
   test "booking a session persists record and redirects to dashboard with flash notice" do
+    post "/login", params: {
+      email: "maya.lin@school.edu",
+      password: "Password123!"
+    }
+    assert_response :redirect
+
     assert_difference("MentoringSession.count", 1) do
       post "/bookings", params: {
         mentor_id: @mentor.id,
