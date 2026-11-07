@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= @title || "StudyPal — Student & Mentor Learning Platform" %></title>
+  <title><%= @title || "Edgenuity — Student & Mentor Learning Platform" %></title>
   <meta name="description" content="Students connect with mentors for personalized assignment support, guidance, and help building confidence in their studies.">
+  <link rel="icon" type="image/svg+xml" href="/edgenuity-icon.svg">
+  <link rel="icon" type="image/png" href="/edgenuity-icon.png">
+  <link rel="apple-touch-icon" href="/edgenuity-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -30,6 +33,62 @@
       to { opacity: 1; transform: translateY(0); }
     }
     .modal-hidden { display: none !important; }
+
+    /* Exact Imagine Edgenuity Logo Styles */
+    .logo {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      text-decoration: none !important;
+      white-space: nowrap !important;
+      font-family: inherit;
+    }
+    .logo-mark {
+      width: 36px !important;
+      height: 36px !important;
+      border-radius: 8px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-shrink: 0 !important;
+      transform: none !important;
+      background: transparent !important;
+    }
+    .logo-mark svg {
+      width: 36px !important;
+      height: 36px !important;
+      display: block !important;
+    }
+    .logo-text {
+      display: inline-flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      line-height: 1 !important;
+      user-select: none;
+    }
+    .logo-text .brand-sub {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      font-size: 11.5px !important;
+      font-weight: 500 !important;
+      color: #292929 !important;
+      line-height: 1.1 !important;
+      letter-spacing: 0 !important;
+    }
+    .logo-text .brand-main {
+      font-family: 'DM Sans', 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      font-size: 19.5px !important;
+      font-weight: 800 !important;
+      color: #292929 !important;
+      line-height: 1.05 !important;
+      letter-spacing: -0.5px !important;
+    }
+    @media (max-width: 960px) {
+      .dashboard aside .logo-text,
+      .dashboard aside .logo > span:last-child {
+        display: none !important;
+        font-size: 0 !important;
+      }
+    }
   </style>
 </head>
 <body>
