@@ -11,8 +11,8 @@
     </nav>
 
     <div class="nav-actions">
-      <button class="text-button" type="button" onclick="openLoginModal()">Log in</button>
-      <button class="primary-button small" type="button" onclick="openLoginModal()">
+      <button class="text-button" type="button" onclick="openLoginModal('login')">Log in</button>
+      <button class="primary-button small" type="button" onclick="openLoginModal('signup')">
         Get started <%= icon(:arrow, size: 17) %>
       </button>
       <button class="menu-button" aria-label="Toggle menu" type="button" onclick="toggleMobileMenu()">
@@ -32,7 +32,7 @@
         <p>Connect one-on-one with friendly, verified mentors who guide you through the hard parts—so you can learn with confidence.</p>
         
         <div class="hero-actions">
-          <button class="primary-button" type="button" onclick="openLoginModal()">
+          <button class="primary-button" type="button" onclick="openLoginModal('signup')">
             Find your mentor <%= icon(:arrow, size: 19) %>
           </button>
           <a class="secondary-button" href="#how">
@@ -69,82 +69,104 @@
             </div>
             <span class="online-dot"></span>
           </div>
-        </div>
 
-        <div class="floating-card">
-          <span class="float-icon"><%= icon(:check, size: 19) %></span>
-          <div>
-            <strong>Assignment solved!</strong>
-            <small>You nailed quadratic equations</small>
+          <div class="floating-card">
+            <span class="badge"><%= icon(:check, size: 15) %> Assignment solved</span>
+            <p>Calculus III — Taylor Series</p>
+            <div class="progress-wrap">
+              <div class="progress-bar" style="width: 100%;"></div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Subjects Strip -->
-    <section class="subject-strip" id="subjects">
-      <span>Get help with</span>
-      <% [
-        ["Mathematics", :book, 0],
-        ["Computer science", :spark, 1],
-        ["Physics", :book, 2],
-        ["Chemistry", :book, 3],
-        ["Writing", :book, 4]
-      ].each do |subj, icon_name, idx| %>
-        <button type="button" onclick="openLoginModal()">
-          <i class="subject-icon s<%= idx %>"><%= icon(icon_name, size: 16) %></i>
-          <%= subj %>
-        </button>
-      <% end %>
+    <!-- Subjects Categories Section -->
+    <section class="subjects-section" id="subjects">
+      <div class="section-heading">
+        <span class="eyebrow"><%= icon(:book, size: 17) %> Personalized Learning</span>
+        <h2>Explore subjects where you need a boost</h2>
+      </div>
+
+      <div class="subjects-grid">
+        <div class="subject-card">
+          <span class="subject-icon math">∑</span>
+          <h3>Mathematics</h3>
+          <p>Algebra, Pre-Calculus, AP Calculus AB/BC, Differential Equations & Linear Algebra.</p>
+          <button type="button" class="subject-link" onclick="openLoginModal('signup')">Find Math Mentors →</button>
+        </div>
+
+        <div class="subject-card">
+          <span class="subject-icon cs">&lt;/&gt;</span>
+          <h3>Computer Science</h3>
+          <p>Python, Algorithms, Data Structures, Web Development, Object-Oriented Java & C++.</p>
+          <button type="button" class="subject-link" onclick="openLoginModal('signup')">Find CS Mentors →</button>
+        </div>
+
+        <div class="subject-card">
+          <span class="subject-icon physics">⚛</span>
+          <h3>Physics & Engineering</h3>
+          <p>Kinematics, Thermodynamics, Electricity & Magnetism, Quantum Physics & Statics.</p>
+          <button type="button" class="subject-link" onclick="openLoginModal('signup')">Find Physics Mentors →</button>
+        </div>
+
+        <div class="subject-card">
+          <span class="subject-icon chemistry">⚗</span>
+          <h3>Chemistry & Biology</h3>
+          <p>Organic Chemistry synthesis, Biochemistry, Cellular Biology & Laboratory reports.</p>
+          <button type="button" class="subject-link" onclick="openLoginModal('signup')">Find Science Mentors →</button>
+        </div>
+      </div>
     </section>
 
-    <!-- Steps Section -->
+    <!-- 3-Step Learning Workflow Section -->
     <section class="steps-section" id="how">
-      <div class="section-heading">
-        <span>Simple and supportive</span>
+      <div class="section-heading centered">
+        <span class="eyebrow"><%= icon(:spark, size: 17) %> Simple 3-step workflow</span>
         <h2>From stuck to confident in three steps</h2>
-        <p>No judgment. No confusing explanations. Just the right help, right when you need it.</p>
+        <p>No more staring at confusing problem sets alone. Getting help is fast, safe, and personalized.</p>
       </div>
 
       <div class="steps-grid">
         <article class="step-card">
-          <div class="step-top">
-            <span class="step-icon"><%= icon(:message, size: 22) %></span>
-            <b>01</b>
+          <div class="step-badge">1</div>
+          <div class="step-icon">
+            <%= icon(:search, size: 28) %>
           </div>
-          <h3>Tell us what you need</h3>
-          <p>Share your subject, assignment, and when you would like to meet.</p>
+          <h3>Tell us what you're stuck on</h3>
+          <p>Select your subject and assignment topic. Upload problem screenshots or paste problem questions.</p>
+        </article>
+
+        <article class="step-card active">
+          <div class="step-badge">2</div>
+          <div class="step-icon">
+            <%= icon(:users, size: 28) %>
+          </div>
+          <h3>Match with a verified mentor</h3>
+          <p>Browse top-rated university peer mentors who have mastered your exact curriculum and book a slot.</p>
         </article>
 
         <article class="step-card">
-          <div class="step-top">
-            <span class="step-icon"><%= icon(:users, size: 22) %></span>
-            <b>02</b>
+          <div class="step-badge">3</div>
+          <div class="step-icon">
+            <%= icon(:video, size: 28) %>
           </div>
-          <h3>Match with a mentor</h3>
-          <p>Browse verified experts and choose someone who fits your learning style.</p>
-        </article>
-
-        <article class="step-card">
-          <div class="step-top">
-            <span class="step-icon"><%= icon(:video, size: 22) %></span>
-            <b>03</b>
-          </div>
-          <h3>Learn it together</h3>
-          <p>Meet live, work through the problem, and leave understanding the “why.”</p>
+          <h3>Learn 1-on-1 with live support</h3>
+          <p>Hop into an interactive 1-on-1 audio/video room with whiteboard sharing, step-by-step guidance, and notes.</p>
         </article>
       </div>
     </section>
 
-    <!-- Mentors Section -->
+    <!-- Verified Mentors Showcase Section -->
     <section class="mentors-section" id="mentors">
       <div class="section-heading row">
         <div>
-          <span>Meet your study team</span>
-          <h2>Mentors students love learning with</h2>
+          <span class="eyebrow"><%= icon(:star, size: 17) %> Top rated educators</span>
+          <h2>Meet a few of our verified mentors</h2>
+          <p>Every mentor undergoes strict subject proficiency vetting and background checks.</p>
         </div>
-        <button class="secondary-button" type="button" onclick="openLoginModal()">
-          View all mentors <%= icon(:arrow, size: 18) %>
+        <button class="primary-button small" type="button" onclick="openLoginModal('signup')">
+          Browse all mentors <%= icon(:arrow, size: 17) %>
         </button>
       </div>
 
@@ -152,25 +174,31 @@
         <% @mentors.each do |mentor| %>
           <article class="mentor-card">
             <div class="mentor-photo" style="background-color: <%= mentor.color %>;">
-              <img src="<%= mentor.image %>" alt="<%= mentor.name %>, <%= mentor.role %> mentor">
-              <span class="available">Available</span>
+              <img src="<%= mentor.image %>" alt="<%= mentor.name %>">
+              <span class="verified-pill"><%= icon(:check, size: 13) %> Verified</span>
             </div>
-            <div class="mentor-info">
-              <div class="mentor-name">
+            <div class="mentor-body">
+              <div class="mentor-header">
                 <div>
                   <h3><%= mentor.name %></h3>
                   <p><%= mentor.role %></p>
                 </div>
-                <span><%= icon(:star, size: 15) %> <%= mentor.rating %></span>
+                <div class="rating">
+                  ★ <%= mentor.rating %>
+                </div>
               </div>
+
               <div class="tags">
                 <% mentor.tags_array.each do |tag| %>
                   <span><%= tag %></span>
                 <% end %>
               </div>
-              <div class="mentor-foot">
-                <span><%= icon(:video, size: 16) %> <%= mentor.sessions_count %></span>
-                <button type="button" onclick="openLoginModal()">View profile</button>
+
+              <div class="mentor-footer">
+                <span><%= mentor.sessions_count %></span>
+                <button type="button" class="book-btn" onclick="openLoginModal('signup')">
+                  Book session <%= icon(:arrow, size: 15) %>
+                </button>
               </div>
             </div>
           </article>
@@ -184,7 +212,7 @@
         <span><%= icon(:spark, size: 18) %> Your next breakthrough is closer than you think</span>
         <h2>Ready to stop stressing and start understanding?</h2>
       </div>
-      <button class="light-button" type="button" onclick="openLoginModal()">
+      <button class="light-button" type="button" onclick="openLoginModal('signup')">
         Meet your mentor <%= icon(:arrow, size: 18) %>
       </button>
     </section>
@@ -193,55 +221,95 @@
   <footer>
     <%= logo %>
     <p>Real people. Real learning. Real progress.</p>
-    <span>© 2026 Edgenuity</span>
+    <div style="display: flex; gap: 18px; align-items: center; flex-wrap: wrap;">
+      <button type="button" onclick="openCookiePreferencesModal()" style="background: none; border: none; color: #475569; cursor: pointer; text-decoration: underline; font-size: 13px;">Cookie & Privacy Preferences</button>
+      <span style="color: #94a3b8; font-size: 13px;">© 2026 Edgenuity</span>
+    </div>
   </footer>
 </div>
 
-<!-- Login / Signup Modal -->
+<!-- Dual-Tab Auth (Login / Signup) Modal -->
 <div class="modal-backdrop modal-hidden" id="login-modal-backdrop" role="presentation" onclick="if(event.target === this) closeLoginModal()">
-  <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title">
+  <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
     <button class="modal-close" aria-label="Close login" type="button" onclick="closeLoginModal()">
       <%= icon(:close) %>
     </button>
     <%= logo %>
-    <div class="modal-heading">
-      <span>Welcome back</span>
-      <h2 id="login-title">Ready to keep learning?</h2>
-      <p>Log in to connect with your mentors and get help with your assignments.</p>
+
+    <!-- Tabs switcher -->
+    <div style="display: flex; border-bottom: 2px solid #e2e8f0; margin: 18px 0 20px;">
+      <button type="button" id="auth-tab-login" onclick="switchAuthTab('login')" style="flex: 1; padding: 10px; background: none; border: none; border-bottom: 2px solid #00007c; font-weight: 700; font-size: 14px; color: #00007c; cursor: pointer; margin-bottom: -2px;">
+        Log In
+      </button>
+      <button type="button" id="auth-tab-signup" onclick="switchAuthTab('signup')" style="flex: 1; padding: 10px; background: none; border: none; border-bottom: 2px solid transparent; font-weight: 700; font-size: 14px; color: #64748b; cursor: pointer; margin-bottom: -2px;">
+        Create Account
+      </button>
     </div>
 
-    <form action="/login" method="post" style="display: block; width: 100%;">
-      <button class="google-button" type="submit" name="provider" value="google">
-        <b>G</b> Continue with Google
-      </button>
-    </form>
+    <!-- Login Section -->
+    <div id="auth-login-section">
+      <div class="modal-heading">
+        <h2 id="auth-modal-title" style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Welcome back!</h2>
+        <p style="font-size: 13px; color: #64748b; margin: 0;">Log in to connect with your mentors and access your sessions.</p>
+      </div>
 
-    <div class="divider">
-      <span>or continue with email</span>
+      <form action="/login" method="post" style="margin-top: 16px;">
+        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 12px;">
+          Email address
+          <input required type="email" name="email" placeholder="you@school.edu" style="width: 100%; margin-top: 6px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;" autofocus>
+        </label>
+
+        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 16px;">
+          Password
+          <input required type="password" name="password" placeholder="Enter your password" minlength="6" style="width: 100%; margin-top: 6px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+        </label>
+
+        <button class="primary-button login-submit" type="submit" style="width: 100%; justify-content: center;">
+          Log in to Edgenuity <%= icon(:arrow, size: 18) %>
+        </button>
+      </form>
+
+      <p class="signup-copy" style="text-align: center; margin-top: 16px; font-size: 13px; color: #64748b;">
+        Don't have an account yet? <a href="javascript:void(0)" onclick="switchAuthTab('signup')" style="color: #00007c; font-weight: 700;">Create an account</a>
+      </p>
     </div>
 
-    <form action="/login" method="post">
-      <label>
-        Email address
-        <input required type="email" name="email" placeholder="you@school.edu" value="maya@school.edu" autofocus>
-      </label>
+    <!-- Signup Section -->
+    <div id="auth-signup-section" style="display: none;">
+      <div class="modal-heading">
+        <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Join Edgenuity</h2>
+        <p style="font-size: 13px; color: #64748b; margin: 0;">Create your student account to get matched with top mentors.</p>
+      </div>
 
-      <label>
-        Password
-        <span class="label-row">
-          <span></span>
-          <button type="button" style="font-size: 11px; color: var(--bs-indigo); cursor: pointer;">Forgot password?</button>
-        </span>
-        <input required type="password" name="password" placeholder="Enter your password" minlength="6" value="password123">
-      </label>
+      <form action="/signup" method="post" style="margin-top: 16px;">
+        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 12px;">
+          Full Name
+          <input required type="text" name="name" placeholder="e.g. Alex Rivera" style="width: 100%; margin-top: 6px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+        </label>
 
-      <button class="primary-button login-submit" type="submit">
-        Log in to Edgenuity <%= icon(:arrow, size: 18) %>
-      </button>
-    </form>
+        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 12px;">
+          Email address
+          <input required type="email" name="email" placeholder="you@school.edu" style="width: 100%; margin-top: 6px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+        </label>
 
-    <p class="signup-copy">
-      New to Edgenuity? <a href="/dashboard" style="color: var(--bs-indigo); font-weight: 700;">Enter as Guest Student (Maya)</a>
-    </p>
+        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 12px;">
+          Create a Password (min 8 characters)
+          <input required type="password" name="password" minlength="8" placeholder="At least 8 characters" style="width: 100%; margin-top: 6px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+        </label>
+
+        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 16px;">
+          Confirm Password
+          <input required type="password" name="password_confirmation" minlength="8" placeholder="Confirm your password" style="width: 100%; margin-top: 6px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+        </label>
+
+        <button class="primary-button login-submit" type="submit" style="width: 100%; justify-content: center;">
+          Create Student Account <%= icon(:arrow, size: 18) %>
+        </button>
+      </form>
+
+      <p class="signup-copy" style="text-align: center; margin-top: 16px; font-size: 13px; color: #64748b;">
+        Already have an account? <a href="javascript:void(0)" onclick="switchAuthTab('login')" style="color: #00007c; font-weight: 700;">Log in</a>
+      </p>
+    </div>
   </div>
 </div>
