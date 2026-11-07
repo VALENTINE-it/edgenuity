@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_06_090002) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_07_100002) do
   create_table "admins", force: :cascade do |t|
     t.string "username", null: false
     t.string "email", null: false
@@ -37,6 +37,24 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_06_090002) do
     t.index ["status"], name: "index_contact_messages_on_status"
   end
 
+  create_table "cookie_preferences", force: :cascade do |t|
+    t.integer "user_id"
+    t.string "visitor_token", null: false
+    t.string "consent_status", null: false
+    t.boolean "essential", default: true, null: false
+    t.boolean "functional", default: false, null: false
+    t.boolean "analytics", default: false, null: false
+    t.boolean "personalization", default: false, null: false
+    t.string "ip_address"
+    t.string "user_agent"
+    t.datetime "consented_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["consent_status"], name: "index_cookie_preferences_on_consent_status"
+    t.index ["user_id"], name: "index_cookie_preferences_on_user_id"
+    t.index ["visitor_token"], name: "index_cookie_preferences_on_visitor_token"
+  end
+
   create_table "mentoring_sessions", force: :cascade do |t|
     t.string "student_name"
     t.integer "mentor_id", null: false
@@ -49,10 +67,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_06_090002) do
     t.string "help_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "user_id"
     t.index ["mentor_id"], name: "index_mentoring_sessions_on_mentor_id"
     t.index ["session_date"], name: "index_mentoring_sessions_on_session_date"
     t.index ["status"], name: "index_mentoring_sessions_on_status"
     t.index ["student_name"], name: "index_mentoring_sessions_on_student_name"
+    t.index ["user_id"], name: "index_mentoring_sessions_on_user_id"
   end
 
   create_table "mentors", force: :cascade do |t|
@@ -68,5 +88,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_06_090002) do
     t.index ["name"], name: "index_mentors_on_name"
   end
 
+  create_table "users", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "email", null: false
+    t.string "password_digest", null: false
+    t.string "role", default: "student", null: false
+    t.string "avatar_url"
+    t.string "grade_level"
+    t.datetime "last_login_at"
+    t.string "last_login_ip"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["role"], name: "index_users_on_role"
+  end
+
+  add_foreign_key "cookie_preferences", "users"
   add_foreign_key "mentoring_sessions", "mentors"
+  add_foreign_key "mentoring_sessions", "users"
 end
