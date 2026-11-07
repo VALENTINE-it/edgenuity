@@ -13,6 +13,7 @@ class StudyPalApp < Roda
   plugin :all_verbs
   plugin :head
   plugin :json
+  plugin :cookies
   plugin :error_handler
 
   MAX_BODY_BYTES = 1_048_576 # 1 MB body size restriction
