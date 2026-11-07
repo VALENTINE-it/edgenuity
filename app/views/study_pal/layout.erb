@@ -89,6 +89,141 @@
         font-size: 0 !important;
       }
     }
+
+    /* Cookie Consent Banner & Modal Styles */
+    .cookie-banner {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      right: 24px;
+      max-width: 650px;
+      margin: 0 auto;
+      z-index: 999;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
+      padding: 22px 26px;
+      animation: fadeInSlide 0.35s ease-out;
+    }
+    .cookie-banner h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cookie-banner p {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .cookie-banner-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .cookie-btn-primary {
+      background: #00007c;
+      color: #ffffff;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .cookie-btn-primary:hover {
+      background: #000060;
+    }
+    .cookie-btn-secondary {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .cookie-btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .cookie-btn-subtle {
+      background: transparent;
+      color: #64748b;
+      border: none;
+      padding: 9px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .pref-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .pref-info h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 3px;
+    }
+    .pref-info p {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+      margin: 0;
+    }
+    .switch-label {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .switch-label input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #cbd5e1;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #00007c;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    input:disabled + .slider {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -106,12 +241,100 @@
 
   <%= yield %>
 
+  <!-- Cookie Consent Banner -->
+  <% if @cookie_consent.nil? %>
+    <div class="cookie-banner" id="cookie-consent-banner">
+      <h3>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00007c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/><path d="M8.5 8.5v.01"/><path d="M16 15.5v.01"/><path d="M12 12v.01"/><path d="M11 17v.01"/><path d="M7 14v.01"/></svg>
+        Your Privacy & Cookie Choices
+      </h3>
+      <p>
+        Edgenuity uses essential session cookies to authenticate your account and protect against CSRF attacks. With your permission, we also use functional and analytics preferences to enhance your learning experience and tailor mentor recommendations.
+      </p>
+      <div class="cookie-banner-actions">
+        <button type="button" class="cookie-btn-primary" onclick="submitConsent('accepted')">Accept All</button>
+        <button type="button" class="cookie-btn-secondary" onclick="openCookiePreferencesModal()">Customize Preferences</button>
+        <button type="button" class="cookie-btn-subtle" onclick="submitConsent('denied')">Decline Optional</button>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Data & Privacy Preferences Modal -->
+  <div class="modal-backdrop modal-hidden" id="cookie-preferences-backdrop" role="presentation" onclick="if(event.target === this) closeCookiePreferencesModal()">
+    <div class="login-modal" style="max-width: 520px;" role="dialog" aria-modal="true" aria-labelledby="cookie-pref-title">
+      <button class="modal-close" aria-label="Close preferences" type="button" onclick="closeCookiePreferencesModal()">
+        <%= icon(:close) %>
+      </button>
+      
+      <div style="margin-bottom: 20px;">
+        <h2 id="cookie-pref-title" style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Data & Cookie Preferences</h2>
+        <p style="font-size: 13px; color: #64748b; margin: 0;">Customize which cookies and data preferences you wish to enable. Essential cookies are required to authenticate your account.</p>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <!-- Essential -->
+        <div class="pref-item">
+          <div class="pref-info">
+            <h4>Strictly Necessary (Session Cookies)</h4>
+            <p>Required for secure authentication, session management, CSRF defense, and database integrity.</p>
+          </div>
+          <label class="switch-label">
+            <input type="checkbox" checked disabled>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Functional -->
+        <div class="pref-item">
+          <div class="pref-info">
+            <h4>Functional Preferences</h4>
+            <p>Remembers your UI settings, dashboard collapse states, and preferred time zones.</p>
+          </div>
+          <label class="switch-label">
+            <input type="checkbox" id="pref-functional" <%= 'checked' if @cookie_consent&.dig('functional') %>>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Analytics -->
+        <div class="pref-item">
+          <div class="pref-info">
+            <h4>Analytics & Progress Tracking</h4>
+            <p>Tracks your weekly learning progress, session history, and platform metrics anonymously.</p>
+          </div>
+          <label class="switch-label">
+            <input type="checkbox" id="pref-analytics" <%= 'checked' if @cookie_consent&.dig('analytics') %>>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Personalization -->
+        <div class="pref-item">
+          <div class="pref-info">
+            <h4>Personalized Recommendations</h4>
+            <p>Tailors recommended subject mentors and suggested time slots based on your study history.</p>
+          </div>
+          <label class="switch-label">
+            <input type="checkbox" id="pref-personalization" <%= 'checked' if @cookie_consent&.dig('personalization') %>>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button type="button" class="cookie-btn-secondary" onclick="closeCookiePreferencesModal()">Cancel</button>
+        <button type="button" class="cookie-btn-primary" onclick="saveCustomPreferences()">Save Preferences</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Interactive Modal & State Scripts -->
   <script>
-    function openLoginModal() {
+    function openLoginModal(tab = 'login') {
       const modal = document.getElementById('login-modal-backdrop');
       if (modal) {
         modal.classList.remove('modal-hidden');
+        switchAuthTab(tab);
       }
     }
 
@@ -119,6 +342,25 @@
       const modal = document.getElementById('login-modal-backdrop');
       if (modal) {
         modal.classList.add('modal-hidden');
+      }
+    }
+
+    function switchAuthTab(tab) {
+      const loginForm = document.getElementById('auth-login-section');
+      const signupForm = document.getElementById('auth-signup-section');
+      const loginTabBtn = document.getElementById('auth-tab-login');
+      const signupTabBtn = document.getElementById('auth-tab-signup');
+      
+      if (tab === 'signup') {
+        if (loginForm) loginForm.style.display = 'none';
+        if (signupForm) signupForm.style.display = 'block';
+        if (loginTabBtn) { loginTabBtn.style.borderBottomColor = 'transparent'; loginTabBtn.style.color = '#64748b'; }
+        if (signupTabBtn) { signupTabBtn.style.borderBottomColor = '#00007c'; signupTabBtn.style.color = '#00007c'; }
+      } else {
+        if (loginForm) loginForm.style.display = 'block';
+        if (signupForm) signupForm.style.display = 'none';
+        if (loginTabBtn) { loginTabBtn.style.borderBottomColor = '#00007c'; loginTabBtn.style.color = '#00007c'; }
+        if (signupTabBtn) { signupTabBtn.style.borderBottomColor = 'transparent'; signupTabBtn.style.color = '#64748b'; }
       }
     }
 
@@ -156,6 +398,76 @@
         nav.classList.toggle('open');
       }
     }
+
+    /* Cookie Consent Management */
+    function openCookiePreferencesModal() {
+      const modal = document.getElementById('cookie-preferences-backdrop');
+      if (modal) modal.classList.remove('modal-hidden');
+    }
+
+    function closeCookiePreferencesModal() {
+      const modal = document.getElementById('cookie-preferences-backdrop');
+      if (modal) modal.classList.add('modal-hidden');
+    }
+
+    function submitConsent(status) {
+      const payload = { status: status };
+      fetch('/api/cookie-consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(r => r.json()).then(data => {
+        const banner = document.getElementById('cookie-consent-banner');
+        if (banner) banner.style.display = 'none';
+        showToast(status === 'accepted' ? 'All cookies and preferences accepted.' : 'Optional cookies declined.');
+      }).catch(err => {
+        console.error('Consent error:', err);
+      });
+    }
+
+    function saveCustomPreferences() {
+      const functional = document.getElementById('pref-functional')?.checked || false;
+      const analytics = document.getElementById('pref-analytics')?.checked || false;
+      const personalization = document.getElementById('pref-personalization')?.checked || false;
+
+      const payload = {
+        status: 'custom',
+        functional: functional,
+        analytics: analytics,
+        personalization: personalization
+      };
+
+      fetch('/api/cookie-consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(r => r.json()).then(data => {
+        closeCookiePreferencesModal();
+        const banner = document.getElementById('cookie-consent-banner');
+        if (banner) banner.style.display = 'none';
+        showToast('Your privacy and cookie preferences have been saved.');
+      }).catch(err => {
+        console.error('Preference save error:', err);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.className = 'flash-notice';
+      toast.innerText = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    // Auto open modal if URL params request it
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('login') === 'true') {
+        openLoginModal('login');
+      } else if (urlParams.get('signup') === 'true') {
+        openLoginModal('signup');
+      }
+    });
   </script>
 </body>
 </html>
