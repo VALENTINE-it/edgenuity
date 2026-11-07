@@ -22,6 +22,6 @@ module StudyPalHelper
   end
 
   def logo
-    %(<div class="logo"><span class="logo-mark">#{icon(:book, size: 19)}</span><span>Study<span>Pal</span></span></div>)
+    %(<div class="logo"><span class="logo-mark"><svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="36" height="36" rx="8" fill="#00007c"/><rect x="8.5" y="8.5" width="19" height="5" rx="2.5" fill="#ffffff"/><rect x="8.5" y="15.5" width="12" height="5" rx="2.5" fill="#ffffff"/><rect x="8.5" y="22.5" width="19" height="5" rx="2.5" fill="#ffffff"/></svg></span><span class="logo-text"><span class="brand-sub">imagine</span><span class="brand-main">edgenuity</span></span></div>)
   end
 end
