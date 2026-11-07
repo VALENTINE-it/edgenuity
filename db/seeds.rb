@@ -1,4 +1,4 @@
-# Seed mentors matching StudyPal Figma design
+# Seed verified mentors matching Edgenuity platform specifications
 mentors_data = [
   {
     name: "Dr. Lena Ortiz",
@@ -29,7 +29,7 @@ mentors_data = [
   }
 ]
 
-mentors = mentors_data.map do |attrs|
+mentors_data.each do |attrs|
   Mentor.find_or_create_by!(name: attrs[:name]) do |m|
     m.role = attrs[:role]
     m.image = attrs[:image]
@@ -40,14 +40,4 @@ mentors = mentors_data.map do |attrs|
   end
 end
 
-lena = mentors.first
-MentoringSession.find_or_create_by!(student_name: "Maya", mentor: lena, topic: "Integration techniques") do |s|
-  s.subject = "CALCULUS"
-  s.session_date = Date.new(2026, 3, 14)
-  s.start_time = "10:30 AM"
-  s.end_time = "11:15 AM"
-  s.status = "confirmed"
-  s.help_type = "Assignment review"
-end
-
-puts "Seeded #{Mentor.count} mentors and #{MentoringSession.count} mentoring sessions."
+puts "Database seeded: #{Mentor.count} verified mentors ready."
