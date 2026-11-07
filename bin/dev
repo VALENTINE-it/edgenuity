@@ -1,8 +1,19 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 if ! gem list foreman -i --silent; then
   echo "Installing foreman..."
   gem install foreman
+fi
+
+# Clean up stale pid or stopped server if present
+if [ -f tmp/pids/server.pid ]; then
+  OLD_PID=$(cat tmp/pids/server.pid 2>/dev/null)
+  if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+    echo "Stopping existing server process ($OLD_PID)..."
+    kill -TERM "$OLD_PID" 2>/dev/null || kill -KILL "$OLD_PID" 2>/dev/null
+    sleep 1
+  fi
+  rm -f tmp/pids/server.pid
 fi
 
 # Default to port 3000 if not specified
