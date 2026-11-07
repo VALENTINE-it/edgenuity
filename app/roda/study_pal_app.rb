@@ -2,6 +2,7 @@
 
 require "roda"
 require "securerandom"
+require "json"
 require_relative "../helpers/study_pal_helper"
 require_relative "../services/rate_limiter"
 
@@ -63,6 +64,47 @@ class StudyPalApp < Roda
       }
     end
 
+    # Visitor Token Resolution for Session & Privacy Consent
+    @visitor_token = r.cookies["edgenuity_visitor_token"]
+    if @visitor_token.blank?
+      @visitor_token = SecureRandom.hex(16)
+      r.response.set_cookie("edgenuity_visitor_token", {
+        value: @visitor_token,
+        path: "/",
+        expires: 1.year.from_now,
+        httponly: true,
+        same_site: :lax
+      })
+    end
+
+    # Authenticated User Resolution
+    @current_user = nil
+    if r.session["user_id"].present?
+      @current_user = User.find_by(id: r.session["user_id"])
+    end
+
+    # Cookie Consent State Resolution
+    consent_cookie = r.cookies["edgenuity_consent"]
+    @cookie_consent = nil
+    if consent_cookie.present?
+      begin
+        @cookie_consent = JSON.parse(consent_cookie)
+      rescue StandardError
+        @cookie_consent = nil
+      end
+    end
+
+    if @cookie_consent.nil? && @current_user&.cookie_preference
+      pref = @current_user.cookie_preference
+      @cookie_consent = {
+        "status" => pref.consent_status,
+        "essential" => pref.essential,
+        "functional" => pref.functional,
+        "analytics" => pref.analytics,
+        "personalization" => pref.personalization
+      }
+    end
+
     # Flash Notice Handling
     @flash_notice = r.session["flash_notice"]
     r.session.delete("flash_notice")
@@ -120,7 +162,7 @@ class StudyPalApp < Roda
 
     # Root route: Landing page (or redirect to dashboard if logged in)
     r.root do
-      if r.session["user_logged_in"]
+      if @current_user
         r.redirect "/dashboard"
       else
         @mentors = Rails.cache.fetch("public_mentors_collection", expires_in: 15.minutes) do
@@ -132,10 +174,16 @@ class StudyPalApp < Roda
 
     # Student Dashboard route
     r.on "dashboard" do
+      unless @current_user
+        r.session["flash_notice"] = "Please log in or create an account to view your dashboard."
+        r.redirect "/?login=true"
+      end
+
       @mentors = Rails.cache.fetch("public_mentors_collection", expires_in: 15.minutes) do
         Mentor.all.to_a
       end
-      @upcoming_session = MentoringSession.where(student_name: "Maya").order(session_date: :asc).first || MentoringSession.first
+      @upcoming_session = @current_user.mentoring_sessions.upcoming.first
+      @user_sessions = @current_user.mentoring_sessions.order(session_date: :asc).to_a
       view "dashboard"
     end
 
@@ -151,6 +199,11 @@ class StudyPalApp < Roda
 
     # Student Bookings action
     r.post "bookings" do
+      unless @current_user
+        r.session["flash_notice"] = "Please log in or create an account to book a mentoring session."
+        r.redirect "/?login=true"
+      end
+
       allowed, retry_after, _ = RateLimiter.check("booking:#{@client_ip}", limit: 15, window: 60)
       unless allowed
         r.session["flash_notice"] = "Too many booking attempts. Please wait #{retry_after} seconds."
@@ -166,7 +219,8 @@ class StudyPalApp < Roda
 
       session_date = Date.today + 3.days
       MentoringSession.create!(
-        student_name: "Maya",
+        user: @current_user,
+        student_name: @current_user.name,
         mentor: mentor,
         subject: mentor&.tags_array&.first&.upcase || "LEARNING",
         topic: "#{help_type} with #{mentor&.name || 'Mentor'}",
@@ -181,25 +235,78 @@ class StudyPalApp < Roda
       r.redirect "/dashboard"
     end
 
-    # Student / Guest Login action
-    r.post "login" do
-      allowed, retry_after, _ = RateLimiter.check("student_login:#{@client_ip}", limit: 20, window: 60)
+    # User Registration (Sign up)
+    r.post "signup" do
+      allowed, retry_after, _ = RateLimiter.check("signup:#{@client_ip}", limit: 10, window: 60)
       unless allowed
-        r.session["flash_notice"] = "Too many login attempts. Please wait #{retry_after} seconds."
-        r.redirect "/"
+        r.session["flash_notice"] = "Too many registration attempts. Please wait #{retry_after} seconds."
+        r.redirect "/?signup=true"
       end
 
-      # Student guest session
-      r.session["user_logged_in"] = true
-      r.session["user_name"] = "Maya"
-      r.session["flash_notice"] = "Welcome back, Maya!"
-      r.redirect "/dashboard"
+      name = r.params["name"].to_s.strip
+      email = r.params["email"].to_s.strip.downcase
+      password = r.params["password"].to_s
+      password_conf = r.params["password_confirmation"].to_s.presence || password
+
+      user = User.new(
+        name: name,
+        email: email,
+        password: password,
+        password_confirmation: password_conf
+      )
+
+      if user.save
+        r.session.clear
+        r.session["user_id"] = user.id
+        user.update_columns(last_login_at: Time.now.utc, last_login_ip: @client_ip)
+
+        # Associate any prior anonymous cookie consent
+        if @visitor_token.present?
+          CookiePreference.where(visitor_token: @visitor_token, user_id: nil).update_all(user_id: user.id)
+        end
+
+        r.session["flash_notice"] = "Welcome to Edgenuity, #{user.first_name}! Your account has been created."
+        r.redirect "/dashboard"
+      else
+        r.session["flash_notice"] = user.errors.full_messages.join(". ")
+        r.redirect "/?signup=true"
+      end
     end
 
-    # Student / Guest Logout action
+    # User Login
+    r.post "login" do
+      allowed, retry_after, _ = RateLimiter.check("login:#{@client_ip}", limit: 15, window: 60)
+      unless allowed
+        r.session["flash_notice"] = "Too many login attempts. Please wait #{retry_after} seconds."
+        r.redirect "/?login=true"
+      end
+
+      email = r.params["email"].to_s.strip.downcase
+      password = r.params["password"].to_s
+
+      user = User.find_by(email: email)
+      if user&.authenticate(password)
+        r.session.clear
+        r.session["user_id"] = user.id
+        user.update_columns(last_login_at: Time.now.utc, last_login_ip: @client_ip)
+
+        # Associate visitor cookie preferences with this user
+        if @visitor_token.present?
+          CookiePreference.where(visitor_token: @visitor_token, user_id: nil).update_all(user_id: user.id)
+        end
+
+        r.session["flash_notice"] = "Welcome back, #{user.first_name}!"
+        r.redirect "/dashboard"
+      else
+        r.session["flash_notice"] = "Invalid email or password."
+        r.redirect "/?login=true"
+      end
+    end
+
+    # User Logout
     r.on "logout" do
-      r.session.delete("user_logged_in")
-      r.session.delete("user_name")
+      r.session.delete("user_id")
+      r.session.clear
       r.session["flash_notice"] = "You have been logged out successfully."
       r.redirect "/"
     end
@@ -227,15 +334,170 @@ class StudyPalApp < Roda
               waiting: conn_pool.stat[:waiting]
             },
             models: {
+              users_count: User.count,
               mentors_count: Mentor.count,
               sessions_count: MentoringSession.count,
-              unread_messages: ContactMessage.unread.count
+              unread_messages: ContactMessage.unread.count,
+              cookie_preferences_count: CookiePreference.count
             },
             memory: {
               tracked_rate_limit_keys: RateLimiter.stats[:tracked_keys]
             }
           }
         )
+      end
+
+      # Cookie Consent & Data Preferences API
+      r.on "cookie-consent" do
+        r.get do
+          pref = if @current_user&.cookie_preference
+                   @current_user.cookie_preference
+                 else
+                   CookiePreference.find_by(visitor_token: @visitor_token)
+                 end
+
+          if pref
+            json_success(
+              status: pref.consent_status,
+              essential: pref.essential,
+              functional: pref.functional,
+              analytics: pref.analytics,
+              personalization: pref.personalization,
+              consented_at: pref.consented_at
+            )
+          else
+            json_success(
+              status: "unprompted",
+              essential: true,
+              functional: false,
+              analytics: false,
+              personalization: false
+            )
+          end
+        end
+
+        r.post do
+          status_choice = r.params["status"].to_s.strip
+          status_choice = "custom" unless %w[accepted denied custom].include?(status_choice)
+
+          is_accepted = (status_choice == "accepted")
+          is_denied = (status_choice == "denied")
+
+          functional = is_accepted ? true : (is_denied ? false : (r.params["functional"] == true || r.params["functional"] == "true" || r.params["functional"] == "1"))
+          analytics = is_accepted ? true : (is_denied ? false : (r.params["analytics"] == true || r.params["analytics"] == "true" || r.params["analytics"] == "1"))
+          personalization = is_accepted ? true : (is_denied ? false : (r.params["personalization"] == true || r.params["personalization"] == "true" || r.params["personalization"] == "1"))
+
+          pref = CookiePreference.find_or_initialize_by(visitor_token: @visitor_token)
+          pref.user = @current_user if @current_user
+          pref.consent_status = status_choice
+          pref.essential = true
+          pref.functional = functional
+          pref.analytics = analytics
+          pref.personalization = personalization
+          pref.ip_address = @client_ip
+          pref.user_agent = r.env["HTTP_USER_AGENT"].to_s.truncate(255)
+          pref.consented_at = Time.now.utc
+          pref.save!
+
+          cookie_payload = {
+            status: status_choice,
+            essential: true,
+            functional: functional,
+            analytics: analytics,
+            personalization: personalization
+          }
+
+          r.response.set_cookie("edgenuity_consent", {
+            value: cookie_payload.to_json,
+            path: "/",
+            expires: 1.year.from_now,
+            same_site: :lax
+          })
+
+          json_success(
+            message: "Cookie and data preferences saved successfully.",
+            preferences: cookie_payload
+          )
+        end
+      end
+
+      # User Auth API Endpoints
+      r.on "auth" do
+        r.post "signup" do
+          name = r.params["name"].to_s.strip
+          email = r.params["email"].to_s.strip.downcase
+          password = r.params["password"].to_s
+          password_conf = r.params["password_confirmation"].to_s.presence || password
+
+          user = User.new(
+            name: name,
+            email: email,
+            password: password,
+            password_confirmation: password_conf
+          )
+
+          if user.save
+            r.session.clear
+            r.session["user_id"] = user.id
+            user.update_columns(last_login_at: Time.now.utc, last_login_ip: @client_ip)
+
+            if @visitor_token.present?
+              CookiePreference.where(visitor_token: @visitor_token, user_id: nil).update_all(user_id: user.id)
+            end
+
+            json_success(
+              message: "Account created successfully",
+              user: { id: user.id, name: user.name, email: user.email, role: user.role }
+            )
+          else
+            json_error("VALIDATION_ERROR", user.errors.full_messages.join(", "), http_status: 422)
+          end
+        end
+
+        r.post "login" do
+          email = r.params["email"].to_s.strip.downcase
+          password = r.params["password"].to_s
+
+          user = User.find_by(email: email)
+          if user&.authenticate(password)
+            r.session.clear
+            r.session["user_id"] = user.id
+            user.update_columns(last_login_at: Time.now.utc, last_login_ip: @client_ip)
+
+            if @visitor_token.present?
+              CookiePreference.where(visitor_token: @visitor_token, user_id: nil).update_all(user_id: user.id)
+            end
+
+            json_success(
+              message: "Login successful",
+              user: { id: user.id, name: user.name, email: user.email, role: user.role }
+            )
+          else
+            json_error("INVALID_CREDENTIALS", "Invalid email or password", http_status: 401)
+          end
+        end
+
+        r.get "me" do
+          if @current_user
+            json_success(
+              user: {
+                id: @current_user.id,
+                name: @current_user.name,
+                email: @current_user.email,
+                role: @current_user.role,
+                grade_level: @current_user.grade_level
+              }
+            )
+          else
+            json_error("UNAUTHORIZED", "Not logged in", http_status: 401)
+          end
+        end
+
+        r.post "logout" do
+          r.session.delete("user_id")
+          r.session.clear
+          json_success(message: "Logged out successfully")
+        end
       end
 
       # Contact Form Submissions (Phase 11)
@@ -266,7 +528,7 @@ class StudyPalApp < Roda
             message_id: msg.id
           )
         else
-          json_error("VALIDATION_ERROR", msg.errors.full_messages.join(", "), status: 422)
+          json_error("VALIDATION_ERROR", msg.errors.full_messages.join(", "), http_status: 422)
         end
       end
 
@@ -389,10 +651,12 @@ class StudyPalApp < Roda
               role: current_admin.role
             },
             summary: {
+              total_users: User.count,
               total_mentors: Mentor.count,
               total_sessions: MentoringSession.count,
               upcoming_sessions: MentoringSession.upcoming.count,
               unread_contact_messages: ContactMessage.unread.count,
+              total_cookie_preferences: CookiePreference.count,
               sqlite_journal_mode: ActiveRecord::Base.connection.execute("PRAGMA journal_mode;").first["journal_mode"]
             }
           )
@@ -419,7 +683,7 @@ class StudyPalApp < Roda
               if mentor.save
                 json_success({ message: "Mentor created successfully", mentor: mentor }, http_status: 201)
               else
-                json_error("VALIDATION_ERROR", mentor.errors.full_messages.join(", "), status: 422)
+                json_error("VALIDATION_ERROR", mentor.errors.full_messages.join(", "), http_status: 422)
               end
             end
           end
@@ -442,7 +706,7 @@ class StudyPalApp < Roda
               if mentor.update(attrs)
                 json_success(message: "Mentor updated successfully", mentor: mentor)
               else
-                json_error("VALIDATION_ERROR", mentor.errors.full_messages.join(", "), status: 422)
+                json_error("VALIDATION_ERROR", mentor.errors.full_messages.join(", "), http_status: 422)
               end
             end
 
@@ -457,10 +721,11 @@ class StudyPalApp < Roda
         r.on "sessions" do
           r.is do
             r.get do
-              sessions = MentoringSession.includes(:mentor).order(session_date: :desc).limit(100).map do |s|
+              sessions = MentoringSession.includes(:mentor, :user).order(session_date: :desc).limit(100).map do |s|
                 {
                   id: s.id,
                   student_name: s.student_name,
+                  user_id: s.user_id,
                   mentor_name: s.mentor&.name,
                   subject: s.subject,
                   topic: s.topic,
