@@ -13,11 +13,11 @@ class StudyPalTest < ActionDispatch::IntegrationTest
     )
   end
 
-  test "landing page renders successfully with StudyPal branding and mentors" do
+  test "landing page renders successfully with Edgenuity branding and mentors" do
     get "/"
     assert_response :success
-    assert_includes response.body, "Study"
-    assert_includes response.body, "Pal"
+    assert_includes response.body, "edgenuity"
+    assert_includes response.body, "imagine"
     assert_includes response.body, "Assignment help that finally"
     assert_includes response.body, "makes sense."
     assert_includes response.body, "Dr. Lena Ortiz"
